@@ -1,0 +1,8 @@
+node_modules
+dist
+bin
+
+# dotenv environment variable files
+.env
+.env.*
+!.env.example
