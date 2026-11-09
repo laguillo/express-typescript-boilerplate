@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { pingRoute } from './ping';
-import { sampleRoute } from './sample';
+import { pingRoute } from '@/routes/ping';
+import { sampleRoute } from '@/routes/sample';
 
 const router = Router();
 

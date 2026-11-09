@@ -9,6 +9,9 @@
 # TypeScript build output
 /dist
 
+# Logs
+*.log
+
 # OS generated files
 .DS_Store
 
