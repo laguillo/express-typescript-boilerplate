@@ -165,7 +165,7 @@ Unknown routes and errors respond with JSON: `{ "error": "Not Found", "message":
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+This project is licensed under the [MIT License](LICENSE).
 
 ## 🔗 Repository
 
