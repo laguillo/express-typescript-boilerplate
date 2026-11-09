@@ -1,179 +1,162 @@
 # Express TypeScript Boilerplate
 
-🚀 Modern Express.js boilerplate with TypeScript, powered by Bun.js for optimal performance and developer experience.
+[![CI](https://github.com/laguillo/express-typescript-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/laguillo/express-typescript-boilerplate/actions/workflows/ci.yml)
 
-## 📋 Overview
+🚀 A small Express 5 + TypeScript starter that runs on [Bun](https://bun.sh/): the `.ts` files run directly, with no build step.
 
-This is a production-ready Express.js boilerplate that leverages the power of TypeScript and Bun.js runtime. It provides a solid foundation for building scalable web APIs with modern development tools and best practices.
+## ✨ What's included
 
-## ✨ Features
+- ⚡ **Bun runtime** - run, watch, test and install with a single tool
+- 📘 **Strict TypeScript** - `tsc` is only used for type checking (`noEmit`)
+- 🛡️ **Helmet** - secure HTTP headers by default
+- 🌐 **CORS** - configurable allow-list through `CORS_ORIGIN`
+- 🚧 **Error handling** - JSON 404 and error responses; errors thrown in async handlers reach the error handler
+- 📝 **Validated configuration** - `PORT` and `CORS_ORIGIN` are parsed in one place, and an invalid `PORT` stops the server from starting
+- 🔌 **Graceful shutdown** - the server closes cleanly on `SIGTERM` and `SIGINT`
+- 🧪 **Tests** - `bun test` with example API tests
+- 🛠️ **ESLint & Prettier** - linting and formatting, checked by CI
+- 📁 **Path alias** - `@/*` maps to `src/*`
 
-- ⚡ **Bun.js Runtime** - Ultra-fast JavaScript runtime and package manager
-- 📘 **TypeScript** - Type-safe development with strict configuration
-- 🛠️ **ESLint & Prettier** - Consistent code formatting and linting
-- 🛡️ **Helmet** - Secure HTTP headers by default
-- 🌐 **CORS Support** - Configurable allow-list through `CORS_ORIGIN`
-- 🚧 **Error Handling** - JSON 404 and error responses, async errors forwarded to the handler
-- 📝 **Environment Variables** - `.env` loaded natively by Bun, with validated configuration
-- 🧪 **Tests** - `bun test` with example tests for the API
-- 🤖 **CI** - GitHub Actions workflow running lint, type check, format check and tests
-- 🏗️ **Modular Structure** - Clean separation of concerns
-- 📁 **Path Aliases** - `@/*` imports for cleaner code
+**Not included:** database, authentication, a request validation library and structured logging. `src/schemas/` is an empty placeholder for your validation schemas.
 
-## 🚀 Quick Start
+## 🚀 Quick start
 
-### Prerequisites
-
-- [Bun.js](https://bun.sh/) installed on your machine
-
-### Installation
+You need [Bun](https://bun.sh/). The version used in CI is pinned in `package.json` (`packageManager`).
 
 ```bash
-# Clone the repository
-git clone https://github.com/laguillo/express-typescript-boilerplate.git
-cd express-typescript-boilerplate
+git clone https://github.com/laguillo/express-typescript-boilerplate.git my-api
+cd my-api
 
-# Install dependencies
 bun install
-
-# Create your local environment file
 cp .env.example .env
-
-# Start development server
 bun run dev
 ```
 
-Your API will be running at `http://localhost:3000`
+The API runs at `http://localhost:3000`. If you are starting a new project from this one, also update `name`, `description` and `author` in `package.json`.
 
-## 📜 Available Scripts
+## 📜 Scripts
 
-| Script                 | Description                                               |
-| ---------------------- | --------------------------------------------------------- |
-| `bun run dev`          | Start development server with hot reload                  |
-| `bun run start`        | Start production server                                   |
-| `bun run lint`         | Run ESLint to check code quality                          |
-| `bun run lint:fix`     | Run ESLint and fix what it can                            |
-| `bun run typecheck`    | Type-check the project with `tsc` (no files are emitted)  |
-| `bun run format`       | Format all files with Prettier                            |
-| `bun run format:check` | Check formatting without changing files                   |
-| `bun run test`         | Run the test suite with `bun test`                        |
-| `bun run check`        | Run lint, type check, format check and tests (same as CI) |
+| Script              | Description                                               |
+| ------------------- | --------------------------------------------------------- |
+| `bun run dev`       | Start the development server with hot reload              |
+| `bun run start`     | Start the server without watching for changes             |
+| `bun run lint`      | Run ESLint (`lint:fix` also fixes what it can)            |
+| `bun run typecheck` | Type-check the project with `tsc`                         |
+| `bun run format`    | Format all files with Prettier (`format:check` verifies)  |
+| `bun run test`      | Run the tests with `bun test`                             |
+| `bun run check`     | Run lint, type check, format check and tests (same as CI) |
 
-## 📁 Project Structure
+Run a single test file with `bun test src/app.test.ts`, or filter by name with `bun test -t "<name>"`.
 
+## 🧩 Adding an endpoint
+
+Controllers are methods of a single `ControllerClass` instance, and routes call them through it. Adding `GET /api/hello` takes four small changes plus a test.
+
+**1. Write the handler** in `src/controllers/hello.ts`:
+
+```ts
+import type { Request, Response } from 'express';
+import type { ControllerClass } from '@/controllers/index';
+
+export async function HelloController(
+    this: ControllerClass,
+    req: Request,
+    res: Response
+): Promise<void> {
+    res.status(200).json({ message: 'Hello!' });
+}
 ```
-express-typescript-boilerplate/
-├── .github/workflows/ci.yml  # CI: lint, type check, format check, tests
-├── src/
-│   ├── config/              # Environment parsing and CORS configuration
-│   ├── controllers/         # Route controllers
-│   ├── middlewares/         # Express middlewares (404 and error handling)
-│   ├── routes/              # API routes
-│   ├── schemas/             # Validation schemas (empty placeholder)
-│   ├── app.ts               # Express app configuration
-│   ├── app.test.ts          # API tests
-│   └── index.ts             # Application entry point (starts the server)
-├── .env.example             # Template for the local .env file
-├── .gitignore               # Git ignore file
-├── .prettierignore          # Files skipped by Prettier
-├── .prettierrc              # Prettier configuration
-├── eslint.config.js         # ESLint configuration
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-└── bun.lock                 # Bun lock file
+
+**2. Register it** in `src/controllers/index.ts`, next to the other controllers:
+
+```ts
+import { HelloController } from '@/controllers/hello';
+
+export class ControllerClass {
+    // ...
+    helloController = HelloController;
+}
 ```
+
+**3. Create the route** in `src/routes/hello.ts`:
+
+```ts
+import { Router } from 'express';
+import Controllers from '@/controllers/index';
+
+export const helloRoute = Router();
+
+helloRoute.get('/hello', (req, res) => Controllers.helloController(req, res));
+```
+
+**4. Mount it** in `src/routes/index.ts` with `router.use(helloRoute);`.
+
+Then add a test next to the existing ones in `src/app.test.ts` and run `bun run check`.
+
+> **Two rules for route handlers**
+>
+> - **Return the controller's promise.** Express 5 sends rejected promises to the error handler only if the handler returns them. Writing `void Controllers.x(req, res)` leaves the request hanging when the controller throws.
+> - **Call controllers through `Controllers`** (as above), not as detached functions, so `this` stays bound to the `ControllerClass` instance.
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-Copy `.env.example` to `.env` and adjust the values. Bun loads `.env` automatically (also
-`.env.local` and, under `bun test`, `.env.test`), so no extra package is needed. Variables already
-set in the shell take precedence over the files.
+Copy `.env.example` to `.env` and adjust the values. Bun loads `.env` automatically (also `.env.local` and, under `bun test`, `.env.test`), so no extra package is needed. Variables already set in the shell take precedence over the files.
 
 | Variable      | Default | Description                                                                                    |
 | ------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | `PORT`        | `3000`  | Port the server listens on. The server refuses to start if it is not a valid port number.      |
 | `CORS_ORIGIN` | _empty_ | Comma-separated list of allowed origins. If empty, any origin is allowed, without credentials. |
 
-### TypeScript Configuration
+When `CORS_ORIGIN` is set, only those origins are accepted and credentials are enabled for them.
 
-The project uses a modern TypeScript configuration for Bun.js. Bun runs the `.ts` files directly,
-so `tsc` is only used for type checking (`noEmit`):
+New variables are parsed and validated in `src/config/env.ts`; document them in `.env.example` too.
 
-- Target: ES2022
-- Module: ESNext with bundler resolution
-- Strict mode enabled, plus `noUncheckedIndexedAccess` and `verbatimModuleSyntax`
-- Types: `bun` and `node`
-- Path aliases: `@/*` → `./src/*`
+## 🐛 API
 
-### ESLint Configuration
+| Method | Path          | Response                                        |
+| ------ | ------------- | ----------------------------------------------- |
+| `GET`  | `/api/ping`   | `200` `{ "message": "Server running" }`         |
+| `GET`  | `/api/sample` | `200` `{ "message": "This is a sample route" }` |
 
-ESLint is configured with:
+Unknown routes and errors respond with JSON, never HTML:
 
-- ESLint recommended rules and the `@typescript-eslint` recommended rules
-- Modern flat config format
-- `no-undef` disabled for TypeScript files (the compiler already checks it)
-
-## 📦 Dependencies
-
-### Core Dependencies
-
-- **express** - Web framework
-- **cors** - Cross-origin resource sharing
-- **helmet** - Secure HTTP headers
-
-### Development Dependencies
-
-- **@types/express**, **@types/cors**, **@types/node**, **@types/bun** - TypeScript types
-- **typescript** - Type checking (kept on `~6.0` because `@typescript-eslint` does not support 6.1+ yet)
-- **eslint**, **@eslint/js**, **@typescript-eslint/eslint-plugin**, **@typescript-eslint/parser** - Code linting
-- **prettier** - Code formatting
-
-## 🛠️ Development Workflow
-
-1. **Code Changes**: Make your changes in the `src/` directory
-2. **Hot Reload**: Bun automatically restarts the server on file changes
-3. **Checks**: Run `bun run check` before committing changes (it runs the same steps as CI)
-4. **Formatting**: Prettier formats code with semicolons, single quotes and trailing commas
-
-### Writing routes
-
-Express 5 forwards rejected promises to the error handler, but only if the route handler **returns**
-the promise. Return the controller call directly and do not wrap it with `void`:
-
-```ts
-router.get('/users', (req, res) => Controllers.usersController(req, res));
+```bash
+$ curl -i http://localhost:3000/api/nope
+HTTP/1.1 404 Not Found
+{"error":"Not Found","message":"Cannot GET /api/nope"}
 ```
 
-## 🐛 API Endpoints
+Client errors (4xx) include the reason in `message`. Server errors (5xx) are logged with `console.error` and respond with a generic `Internal Server Error`, so details are never leaked.
 
-Default endpoints available:
+## 📁 Project structure
 
-- `GET /api/ping` - Health check endpoint
-- `GET /api/sample` - Sample route
+```
+src/
+├── config/        # Environment parsing and CORS options
+├── controllers/   # Handlers, aggregated in ControllerClass
+├── middlewares/   # 404 and error handlers
+├── routes/        # Routers, mounted under /api
+├── schemas/       # Validation schemas (empty placeholder)
+├── app.ts         # Builds the Express app (does not listen)
+└── index.ts       # Starts the server
+```
 
-Unknown routes and errors respond with JSON: `{ "error": "Not Found", "message": "..." }`.
+`.github/workflows/ci.yml` runs install (with `--frozen-lockfile`), lint, type check, format check and tests on every push to `main` and on pull requests.
+
+## 🛠️ Tooling notes
+
+- **TypeScript**: strict mode plus `noUncheckedIndexedAccess` and `verbatimModuleSyntax` (type-only imports need `import type`). The `types` option includes both `bun` and `node`. Check the peer range of `@typescript-eslint` before bumping `typescript`.
+- **ESLint**: flat config with the recommended ESLint and `@typescript-eslint` rules. `no-undef` is off for TypeScript files because the compiler already checks it.
+- **Prettier**: 4 spaces, single quotes, semicolons and a 100-character line width (see `.prettierrc`).
+- **Dependencies**: after changing them, run `bun install` and commit `bun.lock`; CI fails if the lockfile is out of sync.
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run linting and formatting
-5. Submit a pull request
+1. Fork the repository and create a feature branch
+2. Make your changes
+3. Run `bun run check`
+4. Open a pull request
 
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## 🔗 Repository
-
-- **GitHub**: https://github.com/laguillo/express-typescript-boilerplate
-- **Bun.js**: https://bun.sh/
-- **Express.js**: https://expressjs.com/
-- **TypeScript**: https://www.typescriptlang.org/
-
----
-
-Built with ❤️ using [Bun.js](https://bun.sh/) for lightning-fast development!
